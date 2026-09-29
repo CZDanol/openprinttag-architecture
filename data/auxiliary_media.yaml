@@ -1,6 +1,8 @@
 objects:
 - name: WashMedium
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   fields:
   - name: uuid
     type: UUID
@@ -29,7 +31,9 @@ objects:
 
 - name: SLAWashMediumContainer
   inherits: Container
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   description:
   - Represents a type/format of a container for SLA wash media.
   - Currently considers only the Prusa SLX canister. Will be potentially extended if necessary.

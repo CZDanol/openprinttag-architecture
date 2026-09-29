@@ -1,7 +1,9 @@
 objects:
 - name: Container
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description:
   - Type of a spool/resin container
   - 'For example: Prusament 1kg spool'
@@ -10,7 +12,9 @@ objects:
   - name: uuid
     type: UUID
     primary_key: true
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
+
     description:
     - Unique identifier of the product.
     - If not provided by the manufacturer, the UUID can be derived as specified in [the UUID section](/uuid).
@@ -25,7 +29,8 @@ objects:
 
   - name: name
     type: string
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
 
   - name: volumetric_capacity
     type: number
@@ -43,8 +48,10 @@ objects:
 
 - name: MaterialContainer
   inherits: Container
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description:
   - Extension of `Container` for containers holding a specific class of material.
 
@@ -53,13 +60,15 @@ objects:
     type: MaterialClass
     example: FFF
     description: FFF/SLA
-    required_in_opt_db: true
-    in_slx_workflow_db: false
+    required:
+      opt_db_schema: true
 
 - name: FFFMaterialContainer
   inherits: MaterialContainer
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description:
   - Extension of `MaterialContainer` for FFF materials (filaments).
   - Filament spools are expected to be hollow cylinders with sides.
@@ -93,8 +102,10 @@ objects:
 
 - name: SLAMaterialContainer
   inherits: MaterialContainer
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description:
   - Container for an SLA resin. Assumed to be a bottle with a threaded cap at the top.
 
@@ -120,7 +131,9 @@ objects:
     description: See SLAMaterialContainerConnector
 
 - name: SLAMaterialContainerConnector
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   description:
   - Describes how the container can be connected to machines for automatic resin deposition.
   - Typically, the container has a threaded cap on the top that can be used to screw on a connector with an extraction tube.
@@ -129,15 +142,19 @@ objects:
   - name: uuid
     type: UUID
     primary_key: true
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
 
   - name: name
     type: string
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
 
 - name: MaterialPackage
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description:
   - Represents a filament spool/resin that is being sold in bulk
   - 'For example: 1kg Prusament PLA Galaxy Black'
@@ -173,7 +190,9 @@ objects:
     example: Prusament 1kg spool
 
   - name: material
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
+
     type: Material
     example: Prusament PLA Galaxy Black
 
@@ -185,7 +204,9 @@ objects:
     - If not specified explicitly, can be also derived using `Brand::material_package_url_template`
 
   - name: nominal_netto_full_weight
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
+
     type: number
     unit: g
     example: 1000
@@ -195,15 +216,18 @@ objects:
 
 - name: FFFMaterialPackage
   inherits: MaterialPackage
-  in_opt: true
-  in_opt_db: true
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
+
   description: Extension of `MaterialPackage` for FFF materials (filaments).
   fields:
   - name: filament_diameter
     type: number
     unit: "\xB5m"
     example: 1750
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
 
   - name: filament_diameter_tolerance
     type: number
@@ -219,12 +243,15 @@ objects:
 
 - name: SLAMaterialPackage
   inherits: MaterialPackage
-  in_opt: true
-  in_opt_db: true
-  fields: []
+  used_in:
+    opt_spec: true
+    opt_db_schema: true
 
+  fields: []
 - name: MaterialPackageInstance
-  in_opt: true
+  used_in:
+    opt_spec: true
+
   description: A single, unique physical instance of the `MaterialPackage` product.
   fields:
   - name: uuid
@@ -284,7 +311,9 @@ objects:
 
 - name: FFFMaterialPackageInstance
   inherits: MaterialPackageInstance
-  in_opt: true
+  used_in:
+    opt_spec: true
+
   description: FFF-specific extension of MaterialPackageInstance
   fields:
   - name: actual_full_length
@@ -296,7 +325,9 @@ objects:
     - Can slightly differ from `FFFMaterialPackage::nominal_full_length`
 
 - name: MaterialPackageDynamicData
-  in_opt: true
+  used_in:
+    opt_spec: true
+
   description:
   - Structure containing dynamic information about package instance.
   - Information here can be overriden by the user.
@@ -306,12 +337,10 @@ objects:
     type: MaterialClass
     example: FFF
     description: FFF/SLA
-    in_slx_connect_comm: false
 
   - name: consumed_weight
     type: number
     unit: g
-    in_slx_connect_comm: false
     description:
     - Amount of material consumed/used.
     - '`remaining_weight = actual_netto_full_weight - consumed_weight`'
@@ -321,7 +350,9 @@ objects:
 
 - name: SLAMaterialPackageDynamicData
   inherits: MaterialPackageDynamicData
-  in_opt: true
+  used_in:
+    opt_spec: true
+
   fields:
   - name: last_stir_time
     type: timestamp

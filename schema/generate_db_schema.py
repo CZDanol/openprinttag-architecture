@@ -11,7 +11,7 @@ from generate_schema_common import (
     type_schema,
 )
 
-setup("opt_db_schema", "required_in_opt_db", "in_opt_db")
+setup("opt_db_schema")
 
 
 def object_ref_or_link_schema(object_schema_file: str):
