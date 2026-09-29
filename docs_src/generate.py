@@ -21,7 +21,7 @@ generate(
         "uuid",
     ],
     project_tag_list={
-        "in_opt_db": ProjectTag("DB", "DB", "In the database"),
-        "in_opt": ProjectTag("OPT", "OPT", "In OpenPrintTag"),
+        "in_opt_db": ProjectTag("DB", "In the database"),
+        "in_opt": ProjectTag("OPT", "In OpenPrintTag"),
     },
 )

@@ -1,6 +1,8 @@
 objects:
 - name: Brand
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   description:
   - Manufacturer/brand of filament/spools/resin/...
 
@@ -8,7 +10,9 @@ objects:
   - name: uuid
     type: UUID
     primary_key: true
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
+
     description:
     - Unique identifier of the brand.
     - If not provided by the manufacturer, the UUID can be derived as specified in [the UUID section](/uuid).
@@ -16,7 +20,8 @@ objects:
   - name: name
     type: string
     example: Prusament
-    required_in_opt_db: true
+    required:
+      opt_db_schema: true
 
   - name: countries_of_origin
     type: list(Country)
@@ -55,12 +60,16 @@ objects:
 
 - name: BrandLinkPatternType
   enum_file: brand_link_pattern_types.yaml
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   description: Utility enum for BrandLinkPattern
   fields: []
 
 - name: BrandLinkPattern
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   description:
   - Pattern for detecting brand-specific links and extracting information from it
 
@@ -81,7 +90,9 @@ objects:
     - Regex pattern for matching the link. The regex is required to use named capturing groups, where the group name is the captured property name in the form of `object_property`
 
 - name: Country
-  in_opt_db: true
+  used_in:
+    opt_db_schema: true
+
   enum_file: countries.yaml
   fields:
   - name: code

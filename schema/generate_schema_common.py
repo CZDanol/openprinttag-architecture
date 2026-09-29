@@ -7,25 +7,37 @@ import json
 dir = os.path.abspath(os.path.dirname(__file__) + "/../")
 data_dir = f"{dir}/data"
 
-out_dir = None
-required_field = None
-filter_field = None
+_out_dir = None
+_schema_name = None
 
 schema_base = ""
 
 
-def setup(out_dir_, required_field_, filter_field_):
-    global out_dir, required_field, filter_field
-    out_dir = f"{dir}/schema/generated/{out_dir_}"
-    required_field = required_field_
-    filter_field = filter_field_
+def setup(out_dir: str, *, schema_name: str | None = None):
+    global _out_dir, _schema_name
+    _schema_name = schema_name or out_dir
+    _out_dir = f"{dir}/schema/generated/{out_dir}"
 
     # Re-create output directory
-    shutil.rmtree(out_dir, ignore_errors=True)
-    os.makedirs(out_dir)
+    shutil.rmtree(_out_dir, ignore_errors=True)
+    os.makedirs(_out_dir)
 
 
 type_schemas = {}
+
+
+def resolve_target_specific_field(data, default_value, *, schema_name: str):
+    if data is None:
+        return default_value
+
+    elif isinstance(data, dict):
+        if (r := data.get(schema_name, None)) is not None:
+            return r
+        else:
+            return data.get("default", default_value)
+
+    else:
+        return data
 
 
 def register_type_schema(name, schema):
@@ -102,7 +114,8 @@ def entity_schema(
 
     all_field_names = set()
     for field in yaml["fields"]:
-        if not field.get(filter_field, True):
+        # Fields used_in is opt-out
+        if not resolve_target_specific_field(field.get("used_in"), True, schema_name=_schema_name):
             continue
 
         field_name = field["name"]
@@ -137,7 +150,7 @@ def entity_schema(
 
         result["properties"][field_name] = data
 
-        match field.get(required_field, False):
+        match resolve_target_specific_field(field.get("required"), False, schema_name=_schema_name):
             case True:
                 result["required"].append(field_name)
 
@@ -160,7 +173,8 @@ def entity_schema(
     result["required"] = list(filter(lambda key: not is_field_excluded(key), result["required"]))
     result["x-recommended"] = list(filter(lambda key: not is_field_excluded(key), result["x-recommended"]))
 
-    assert yaml.get(filter_field, False), f"{yaml['name']} is not marked {filter_field}"
+    # Entity used_in is opt-in
+    assert resolve_target_specific_field(yaml.get("used_in"), False, schema_name=_schema_name), f"{yaml['name']} is missing used_in: {_schema_name}"
 
     return result
 
@@ -199,7 +213,7 @@ def generate_schema_file(basename, data, extra_data=None):
     result = recursive_merge(result, data)
     result = recursive_merge(result, extra_data)
 
-    with open(f"{out_dir}/{filename}", "w") as f:
+    with open(f"{_out_dir}/{filename}", "w") as f:
         json.dump(result, f, indent=2)
         f.write("\n")  # To satisfy precommit autoformatters
 

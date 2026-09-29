@@ -1,17 +1,21 @@
-import shutil
+import io
 import os
+import pathlib
+import shutil
+import subprocess
+import sys
+import typing
+import urllib.request
+
 import jinja2
 import jinja2.ext
-import subprocess
-import urllib.request
-import yaml
-import typing
-import pathlib
-import io
-import sys
-
-import vars
 import tables
+import vars
+import yaml
+
+# Make the repo root importable, so that we can share code with the schema generators
+sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent.parent))
+from schema.generate_schema_common import resolve_target_specific_field
 
 # Re-create output directory
 shutil.rmtree(vars.out_dir, ignore_errors=True)
@@ -71,7 +75,7 @@ def gen_plantuml(source_file):
     args = ["java", "-jar", plantuml_jar, "-o", vars.out_dir, "-tsvg", rendered_uml_file]
     subprocess.run(args)
 
-    result = f'<img src="{rendered_img_file}">'
+    result = f'<img src="{rendered_img_file}">\n\n'
     result += f"*The graph was automatically generated from [`{source_file}`]({vars.repo}/blob/main/docs_src/plantuml/{source_file})*\n\n"
 
     return result
@@ -82,11 +86,17 @@ env.globals["plantuml"] = gen_plantuml
 
 class ProjectTag(typing.NamedTuple):
     stereotype: str
-    shorthand: str
     description: str
 
 
 _project_tag_list = {}
+
+
+def _is_used_in(item, key):
+    # Only used for entities, where used_in is opt-in
+    return resolve_target_specific_field(item.get("used_in"), False, schema_name=key)
+
+
 entity_yamls = dict()
 enum_yamls = dict()
 
@@ -143,7 +153,7 @@ def _inheritance_chain_links(item):
 def gen_plantuml_entity_ref(yaml_file, class_name):
     item = get_entity_yaml(yaml_file, class_name)
 
-    stereotypes = "".join(f"<<{_project_tag_list[key].stereotype}>>" for key in _project_tag_list if item.get(key, False))
+    stereotypes = "".join(f"<<{_project_tag_list[key].stereotype}>>" for key in _project_tag_list if _is_used_in(item, key))
     result = f"entity {class_name} {stereotypes}\n"
     return result
 
@@ -175,7 +185,6 @@ def gen_plantuml_entity(class_name, custom_inheritance=None):
         if field.get("type", None) is not None:
             result += f": {field['type']}"
 
-        result += "".join(f" ${key}" for key in _project_tag_list if field.get(key, False))
         result += "\n"
 
     result += "}\n"
@@ -191,20 +200,6 @@ def gen_plantuml_entity(class_name, custom_inheritance=None):
 
 
 env.globals["plantuml_entity"] = gen_plantuml_entity
-
-
-def gen_projects_common():
-    result = "legend\n"
-
-    for key, data in _project_tag_list.items():
-        result += f"<<{data.stereotype}>> ${key} {data.description}\n"
-
-    result += "end legend\n"
-
-    return result
-
-
-env.globals["projects_common"] = gen_projects_common
 
 # Other documentation support
 
@@ -235,7 +230,7 @@ def gen_class_documentation(class_name):
     if len(chain):
         result += f"**Inherits from:** {' → '.join(chain)}\n\n"
 
-    projects = ", ".join(data.stereotype for key, data in _project_tag_list.items() if item.get(key, False))
+    projects = ", ".join(data.stereotype for key, data in _project_tag_list.items() if _is_used_in(item, key))
     if len(projects):
         result += f"> Used in: {projects}\n\n"
 
