@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import yaml
-from schema_test_common import get_validator, make_registry
+from test_common import get_validator, make_registry
 
 script_dir = Path(__file__).parent
 schema_dir = script_dir / ".." / "generated" / "opt_db_schema"
